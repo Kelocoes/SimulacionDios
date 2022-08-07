@@ -1,5 +1,9 @@
 import fetchDatos as fD
 import Bondad as bd
+import scipy.stats as stats
+import numpy as np
+import PruebaCorridas as pc
+from statistics import median
 
 def PasarSegundos(hora):
     horas = hora.split(":")
@@ -74,3 +78,16 @@ bd.chiCuadradoTabla(mx[0], 0.05)
 print("Chi Llegadas Mexico - monterey")
 bd.chiCuadradoTabla(mx[1], 0.05)
 
+"""
+## Pruebas de independencia por medio de la prueba de corridas
+## Cali
+print("Prueba de independencia de salidas Cali")
+pc.runsTest(cali[0], median(cali[0]))
+print("Prueba de independencia de entradas Cali")
+pc.runsTest(cali[1], median(cali[1]))
+## Mexico
+print("Prueba de independencia de salidas Mexico")
+pc.runsTest(mx[0], median(mx[0]))
+print("Prueba de independencia de llegadas Mexico")
+pc.runsTest(mx[1], median(mx[1]))
+"""
