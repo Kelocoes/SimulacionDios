@@ -33,7 +33,22 @@ def Varianza(datos, media):
 ## Primera lista de salida
 ## Segunda de llegada
 
-cali = fD.infoCali()
+cali = [[],[]]
+mx = [[],[]]
+
+with open('./cali_salidas.txt', 'r') as sal :
+       lin = sal.read().split(' ')
+       cali[0] = lin
+with open('./cali_llegadas.txt', 'r') as sal :
+       lin = sal.read().split(' ')
+       cali[1] = lin
+
+with open('./mx_salidas.txt', 'r') as sal :
+       lin = sal.read().split(' ')
+       mx[0] = lin 
+with open('./mx_llegadas.txt', 'r') as sal :
+       lin = sal.read().split(' ')
+       mx[1] = lin 
 
 
 cali[0] = [PasarSegundos(hora) for hora in cali[0]]
@@ -56,8 +71,6 @@ bd.chiCuadradoTabla(cali[0], 0.05)
 print("Llegadas Cali")
 bd.chiCuadradoTabla(cali[1], 0.05)
 
-
-mx = fD.infoMx()
 
 mx[0] = [PasarSegundos(hora) for hora in mx[0]]
 mx[1] = [PasarSegundos(hora) for hora in mx[1]]   
