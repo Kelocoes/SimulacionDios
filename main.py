@@ -6,7 +6,17 @@ import PruebaCorridas as pc
 import statistics # Aspecto para generar estadisticas
 import random ## Aspecto aleatorio
 import simpy
+import matplotlib.pyplot as plt
 import math
+
+''''''
+## Arreglos de graficos
+
+datosx = [] ## tiempo
+datosy = [] ## salida de aviones
+
+''''''
+
 """FASE DE PRUEBAS DE BONDAD"""
 
 def PasarSegundos(hora):
@@ -148,6 +158,8 @@ def aterrizadoYDespegue(env, avion, llegada, aeropuerto):
         yield env.process(aeropuerto.ocupar_parqueo(avion, llegada))
 
     print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
+    datosx.append(round(env.now,0))
+    datosy.append(avion)
     holi[0] = holi[0] - 1
     print("> Tiempo total del avion " + str(avion) + " en el aeropuerto fue de " + str(round((env.now-tiempo_llegada),0)) + " minutos")
     tiempo_espera.append(env.now - tiempo_llegada)
@@ -161,7 +173,8 @@ def correr_aeropuerto(env, cant_parqueaderos, largoLlegada, largoSalida, mediaAi
             yield peticion
             yield env.process(aeropuerto.ocupar_parqueo(avion, False))
         print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
-
+        datosx.append(round(env.now,0))
+        datosy.append(avion)
     while True:
         yield env.timeout(abs(random.normalvariate(mediaAirLlegada, math.sqrt(varAirLlegada))*largoLlegada))
         holi[0] = holi[0] + 1
@@ -178,6 +191,25 @@ def obtener_promedio_tiempo_espera(tiempo_espera):
     segundos = frac_minutos * 60
     return round(minutos), round(segundos)
     
+""""""""""""""""""""""""""""""""""""""""""""""""
+## grafico 
+
+
+
+def graph():
+    print('me estan llegando estos datos:')
+    print(datosx)
+    print(datosy)
+    plt.scatter(datosx, datosy)
+    plt.xlabel("Tiempo (en minutos) ")
+    plt.ylabel("Salida de aviones")
+
+    plt.title('Salida de aviones del aeropuerto respecto al tiempo')
+
+    plt.show()
+
+
+
 """"""""""""""""""""""""""""""""""""""""""""""""
 
 def main(): 
@@ -242,4 +274,5 @@ def main():
 
 if __name__ == '__main__':
     main()
+    graph()
 
