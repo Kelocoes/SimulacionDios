@@ -30,7 +30,7 @@ def infoMx():
     datosEntrada=[]
     
     datosSalida=pd.read_html(f'https://es.airports-worldwide.info/aeropuerto/MTY/salidas/Salidas_Aeropuerto_Internacional_Mariano_Escobedo?time=2018-12-20%A300')
-    datosEntrada=pd.read_html(f'https://es.airports-worldwide.info/aeropuerto/MTY/llegadas/Llegadas?time=2018-12-20%A300')
+    datosEntrada=pd.read_html(f'https://es.airports-worldwide.info/aeropuerto/MTY/llegadas/Llegadas_Aeropuerto_Internacional_Mariano_Escobedo?time=2018-12-20%A300')
 
     llegadas=[]
     salidas=[]

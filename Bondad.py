@@ -1,5 +1,3 @@
-import numpy
-import matplotlib.pyplot as plt
 import math
 from tabulate import tabulate
 
@@ -42,14 +40,7 @@ def pruebaChiCuadrado(datos, confianza):
     gl = c - 1
     intervalo_clases = crearClases(c)
     FE = frecuenciasEsperadas(n, c)
-    FO = frecuenciasObservadas(intervalo_clases, datos)
-
-    #print(n)
-    #print(c)
-    #print(gl)
-    #print(intervalo_clases)
-    #print(FE)
-    #print(FO)
+    FO = frecuenciasObservadas(intervalo_clases, datos) 
 
     chiCuadrados = [valorCalculadoChiCuadrado(int(FE[i]), int(FO[i])) for i in range(len(FE))]
     x2calc = sum(chiCuadrados)
@@ -102,9 +93,5 @@ def chiCuadradoTabla(datos, confianza):
     print(tabulate(res[0], cabecera, tablefmt="grid"))
     return res[3]
 
-
-#print(pruebaChiCuadrado([0.1,0.2,0.3,0.1], 0.05))
-
-#chiCuadradoTabla([0.1,0.2,0.3,0.1], 0.05)
 
 

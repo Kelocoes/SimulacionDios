@@ -1,13 +1,18 @@
-import fetchDatos as fD
 import Bondad as bd
-import scipy.stats as stats
 import numpy as np
-import PruebaCorridas as pc
 import statistics # Aspecto para generar estadisticas
 import random ## Aspecto aleatorio
 import simpy
 import math
-"""FASE DE PRUEBAS DE BONDAD"""
+import matplotlib.pyplot as plt
+
+''''''
+## Arreglos de graficos
+
+datosx = [] ## tiempo
+datosy = [] ## salida de aviones
+
+''''''
 
 def PasarSegundos(hora):
     horas = hora.split(":")
@@ -20,18 +25,6 @@ def NormalizarMedia(datos):
     for dato in datos:
         datos_normalizados.append((dato - minimo) /(maximo - minimo))
     return datos_normalizados
-    
-def Media(datos):
-    val = 0
-    for dato in datos:
-        val += dato
-    return val/len(datos)
-
-def Varianza(datos, media):
-    val = 0
-    for dato in datos:
-        val += (dato - media)**2
-    return val/len(datos)    
 
 ## Obtenemos los datos:
 ## Primera lista de salida
@@ -67,14 +60,6 @@ mediaLlegadaCali = statistics.mean(cali[1])
 
 varianzaSalidaCali =  statistics.variance(cali[0],mediaSalidaCali)
 varianzaLlegadaCali = statistics.variance(cali[1],mediaLlegadaCali)
-print(mediaLlegadaCali,varianzaLlegadaCali)
-
-aux = 0
-while (aux < 10):
-    holi = random.normalvariate(mediaLlegadaCali, math.sqrt(varianzaLlegadaCali))*len(cali[1])
-    holi2 = random.normalvariate(mediaSalidaCali, math.sqrt(varianzaSalidaCali))*len(cali[0])
-    print(abs(holi),abs(holi2))
-    aux += 1
 
 
 ## Prueba de chicuadrado cali
@@ -91,11 +76,11 @@ mxSeg[1] = [PasarSegundos(hora) for hora in mx[1]]
 mx[0] = NormalizarMedia(mxSeg[0])
 mx[1] = NormalizarMedia(mxSeg[1])
 
-mediaSalidaMx = Media(mx[0])
-mediaLlegadaMx= Media(mx[1])
+mediaSalidaMx = statistics.mean(mx[0])
+mediaLlegadaMx= statistics.mean(mx[1])
 
-varianzaSalidaMx = Varianza(mx[0], mediaSalidaMx)
-varianzaLlegadaMx = Varianza(mx[1], mediaLlegadaMx)
+varianzaSalidaMx = statistics.variance(mx[0], mediaSalidaMx)
+varianzaLlegadaMx = statistics.variance(mx[1], mediaLlegadaMx)
 
 
 ## Prueba de chicuadrado Mexico - Monterrey
@@ -126,7 +111,7 @@ class Aeropuerto(object):
         if(random.uniform(0,1) <= self.probRetraso):
             minutos = random.uniform(30, 80)
             yield self.env.timeout(minutos)
-            print("El avion " + str(avion) + " se retraso " + str(round(minutos,0)) + " minutos")
+            #print("El avion " + str(avion) + " se retraso " + str(round(minutos,0)) + " minutos")
         if (llegada):
             yield self.env.timeout(20,46)
             yield self.env.timeout(abs(random.normalvariate(self.mediaAirSalida, self.varAirSalida)*self.largoSalida))
@@ -141,15 +126,15 @@ class Aeropuerto(object):
 def aterrizadoYDespegue(env, avion, llegada, aeropuerto):
     
     tiempo_llegada = env.now
-    print("El avion " + str(avion) + " llego con tiempo " + str(round(tiempo_llegada,0)) + " minutos")
+    #print("El avion " + str(avion) + " llego con tiempo " + str(round(tiempo_llegada,0)) + " minutos")
 
     with aeropuerto.parqueaderos.request() as peticion:
         yield peticion
         yield env.process(aeropuerto.ocupar_parqueo(avion, llegada))
 
-    print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
+    #print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
     holi[0] = holi[0] - 1
-    print("> Tiempo total del avion " + str(avion) + " en el aeropuerto fue de " + str(round((env.now-tiempo_llegada),0)) + " minutos")
+    #print("> Tiempo total del avion " + str(avion) + " en el aeropuerto fue de " + str(round((env.now-tiempo_llegada),0)) + " minutos")
     tiempo_espera.append(env.now - tiempo_llegada)
 
 def correr_aeropuerto(env, cant_parqueaderos, largoLlegada, largoSalida, mediaAirLlegada, mediaAirSalida, varAirLlegada, varAirSalida, probRetraso):
@@ -160,7 +145,7 @@ def correr_aeropuerto(env, cant_parqueaderos, largoLlegada, largoSalida, mediaAi
         with aeropuerto.parqueaderos.request() as peticion:
             yield peticion
             yield env.process(aeropuerto.ocupar_parqueo(avion, False))
-        print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
+        #print("El avion " + str(avion) + " salio con tiempo " + str(round(env.now,0)) + " minutos")
 
     while True:
         yield env.timeout(abs(random.normalvariate(mediaAirLlegada, math.sqrt(varAirLlegada))*largoLlegada))
@@ -180,65 +165,133 @@ def obtener_promedio_tiempo_espera(tiempo_espera):
     
 """"""""""""""""""""""""""""""""""""""""""""""""
 
+""""""""""""""""""""""""""""""""""""""""""""""""
+## grafico 
+
+def graph(datosx, datosy, xlabel, ylabel, titulo):
+    plt.plot(datosx, datosy, '-ok')
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.title(titulo)
+
+    plt.show()
+
+""""""""""""""""""""""""""""""""""""""""""""""""
+
 def main(): 
+    
     # configuracion
     
-    random.seed(123)
+    y1 = []
+    y2 = []
+    x = [1,2,3,4,5,6,7,8]
+    for portones in range(8,0,-1):
+        resul = []
+        resul2 = []    
+        
+        for i in range(100):
+            
+            holi [0] = 0
+            random.seed()
+            # Correr:
+            ##print("*** Probando el flujo de aviones de Cali en el aeropuerto de Cali ***")
+            env = simpy.Environment()
+            probRetraso = 0.05
+            largoLlegada = len(cali[1])
+            largoSalida = len(cali[0])
 
-    ## Correr:
-    '''
-    largoLlegada = len(cali[1])
-    largoSalida = len(cali[0])
-    probRetraso = 0.05
-    env = simpy.Environment()
-    env.process(correr_aeropuerto(env, 7, largoLlegada, largoSalida, mediaLlegadaCali, mediaSalidaCali, varianzaLlegadaCali, varianzaSalidaCali, probRetraso))
-    env.run(until = 3600) ## Tiempo limite de la simulacion
+            env.process(correr_aeropuerto(env, portones, largoLlegada, largoSalida, mediaLlegadaCali, mediaSalidaCali, varianzaLlegadaCali, varianzaSalidaCali, probRetraso))
+            env.run(until = 3600) ## Tiempo limite de la simulacion
 
-    ## Visualizar resultados: 
-    mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
-    print(
-        "Corriendo la simulacion...",
-        f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
-        )
+            ## Visualizar resultados: 
+            mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
+            #print(
+            #    "Corriendo la simulacion...",
+            #    f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
+            #    )
+
+            #print("Numero de aviones en espera para salir restantes: " + str(holi[0]))
+            resul.append(mins)
+            resul2.append(holi[0])
+        y1.append(statistics.mean(resul))
+        y2.append(statistics.mean(resul2))
+    print(y1)
+    print(y2)
+    
+    graph(x, y1[::-1], 'Número de portones', 'Tiempo de espera' , 'Grafico 1')
+    graph(x, y2[::-1], 'Numero de portones', 'Aviones en espera', 'Grafico 2')
+
+
+    """
+    y1 = []
+    y2 = []
+    x = [1,2,3,4,5,6,7,8]
+    for portones in range(8,0,-1):
+        resul = []
+        resul2 = []    
+        
+        for i in range(100):
+            
+            holi [0] = 0
+            random.seed()
+            # Correr:
+            ##print("*** Probando el flujo de aviones de Monterrey en el aeropuerto de monterrey ***")
+            env = simpy.Environment()
+            probRetraso = 0.05
+            largoLlegada = len(mx[1])
+            largoSalida = len(mx[0])
+
+            env.process(correr_aeropuerto(env, portones, largoLlegada, largoSalida, mediaLlegadaMx, mediaSalidaMx, varianzaLlegadaMx, varianzaSalidaMx, probRetraso))
+            env.run(until = 3600) ## Tiempo limite de la simulacion
+
+            ## Visualizar resultados: 
+            mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
+            #print(
+            #    "Corriendo la simulacion...",
+            #    f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
+            #    )
+
+            #print("Numero de aviones en espera para salir restantes: " + str(holi[0]))
+            resul.append(mins)
+            resul2.append(holi[0])
+        y1.append(statistics.mean(resul))
+        y2.append(statistics.mean(resul2))
+    print(y1)
+    print(y2)
+    
+    graph(x, y1[::-1], 'Número de portones', 'Tiempo de espera' , 'Grafico 1')
+    graph(x, y2[::-1], 'Numero de portones', 'Aviones en espera', 'Grafico 2')
 
     
-    ### Probando el flujo de aviones de monterrey en Cali 
-    ## Correr: 
-    print("*** Probando el flujo de aviones de Monterrey, mx en Cali  ***")
-    largoLlegada = len(mx[1])
-    largoSalida = len(mx[0])
-    probRetraso = 0.05
-    env = simpy.Environment()
-    env.process(correr_aeropuerto(env, 7, largoLlegada, largoSalida, mediaLlegadaMx, mediaSalidaMx, varianzaLlegadaMx, varianzaSalidaMx, probRetraso))
-    env.run(until = 3600) ## Tiempo limite de la simulacion
 
-    ## Visualizar resultados: 
-    mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
-    print(
-        "Corriendo la simulacion...",
-        f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
-        )
-    print(holi)
-    '''
+        ### Probando el flujo de aviones de monterrey en Cali 
+    resul = []
+    resul2 = []
+    for i in range(100):
+        holi [0] = 0
+        random.seed(i)
+        ## Correr: 
+        print("*** Probando el flujo de aviones de Monterrey, mx en Cali  ***")
+        largoLlegada = len(mx[1])
+        largoSalida = len(mx[0])
+        probRetraso = 0.05
+        env = simpy.Environment()
+        env.process(correr_aeropuerto(env, 7, largoLlegada, largoSalida, mediaLlegadaMx, mediaSalidaMx, varianzaLlegadaMx, varianzaSalidaMx, probRetraso))
+        env.run(until = 3600) ## Tiempo limite de la simulacion
 
-    # Correr:
-    print("*** Probando el flujo de aviones de Monterrey en el aeropuerto de monterrey ***")
-    env = simpy.Environment()
-    probRetraso = 0.05
-    largoLlegada = len(mx[1])
-    largoSalida = len(mx[0])
-    
-    env.process(correr_aeropuerto(env, 8, largoLlegada, largoSalida, mediaLlegadaMx, mediaSalidaMx, varianzaLlegadaMx, varianzaSalidaMx, probRetraso))
-    env.run(until = 3600) ## Tiempo limite de la simulacion
-
-    ## Visualizar resultados: 
-    mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
-    print(
-        "Corriendo la simulacion...",
-        f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
-        )
-
-    print("Numero de aviones en espera para salir restantes: " + str(holi[0]))
+        ## Visualizar resultados: 
+        mins, secs = obtener_promedio_tiempo_espera(tiempo_espera)
+        print(
+            "Corriendo la simulacion...",
+            f"\nEl tiempo de espera promedio fue de {mins} minutos y  {secs} segundos.",
+            )
+        
+        print("Numero de aviones en espera para salir restantes: " + str(holi[0]))
+        resul.append(mins)
+        resul2.append(holi[0])
+    print("Promedio de minutos de espera" + str(statistics.mean(resul)))   
+    print("Promedio de aviones en espera" + str(statistics.mean(resul2)))
+    """
 
 if __name__ == '__main__':
     main()
